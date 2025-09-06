@@ -11,39 +11,59 @@
       color: lime;
       font-family: 'Courier New', monospace;
       overflow: hidden;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+
     #ticker {
       white-space: nowrap;
-      position: absolute;
-      bottom: 20px;
-      left: 100%;
-      font-size: 2em;
-      text-shadow: 2px 2px 4px #000;
+      font-size: 8vw; /* scalable by slider */
       animation: scroll linear infinite;
     }
+
     @keyframes scroll {
       from { transform: translateX(100%); }
       to { transform: translateX(-100%); }
     }
+
     #controls {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 10px;
-      border-radius: 10px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.85);
       color: white;
-      font-size: 14px;
+      padding: 15px;
+      overflow-y: auto;
+      display: block;
     }
+
+    label { display:block; margin-top:10px; }
+
     select, button, input {
+      width: 100%;
       margin: 5px 0;
-      font-size: 14px;
+      font-size: 16px;
+    }
+
+    /* Hide controls in landscape (fullscreen ticker) */
+    @media screen and (orientation: landscape) {
+      #controls { display: none; }
+      #ticker { 
+        font-size: 12vw; 
+        color: white;
+        text-shadow: 3px 3px 6px black;
+      }
     }
   </style>
 </head>
 <body>
   <div id="ticker">🎤 IRL.SUBS ready…</div>
 
+  <!-- Control panel (portrait only) -->
   <div id="controls">
     <label>Language:</label>
     <select id="lang">
@@ -51,10 +71,24 @@
       <option value="es-ES">Español</option>
       <option value="fr-FR">Français</option>
       <option value="de-DE">Deutsch</option>
-    </select><br>
+    </select>
 
-    <label>Speed:</label>
-    <input type="range" id="speed" min="5" max="30" value="10"><br>
+    <label>Font:</label>
+    <select id="font">
+      <option value="Courier New">Courier</option>
+      <option value="Arial">Arial</option>
+      <option value="Comic Sans MS">Comic Sans</option>
+      <option value="monospace">Monospace</option>
+    </select>
+
+    <label>Text Size:</label>
+    <input type="range" id="size" min="4" max="15" value="8">
+
+    <label>Outline:</label>
+    <input type="checkbox" id="outline">
+
+    <label>Scroll Speed:</label>
+    <input type="range" id="speed" min="5" max="30" value="10">
 
     <button onclick="startListening()">▶️ Start</button>
     <button onclick="stopListening()">⏹️ Stop</button>
@@ -65,13 +99,16 @@
 <script>
 let ticker = document.getElementById("ticker");
 let langSelect = document.getElementById("lang");
+let fontSelect = document.getElementById("font");
+let sizeInput = document.getElementById("size");
+let outlineCheck = document.getElementById("outline");
 let speedInput = document.getElementById("speed");
 
 let recognition;
 let lastText = "";
 let isListening = false;
 
-// Setup speech recognition
+// Speech recognition setup
 function initRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -90,7 +127,7 @@ function initRecognition() {
   };
 
   recognition.onend = () => {
-    if (isListening) recognition.start(); // keep going
+    if (isListening) recognition.start();
   };
 }
 
@@ -108,18 +145,6 @@ function stopListening() {
 
 function scrollText(text) {
   ticker.textContent = text;
-  let duration = speedInput.value;
-  ticker.style.animation = `scroll ${duration}s linear infinite`;
-  ticker.style.left = "100%";
-}
-
-function repeatLast() {
-  if (lastText) scrollText(lastText);
-}
-
-function clearTicker() {
-  ticker.textContent = "⏭️ Skipped";
-}
-</script>
-</body>
-</html>
+  ticker.style.fontFamily = fontSelect.value;
+  ticker.style.fontSize = sizeInput.value + "vw";
+  ticker.style.textShadow = outlineCheck.checked ? "2px 2px 4px black" :
