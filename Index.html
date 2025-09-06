@@ -5,34 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Voice Ticker</title>
 
-  <!-- Inline manifest -->
-  <script id="manifest" type="application/json">
-  {
-    "name": "Voice Ticker",
-    "short_name": "Ticker",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#000000",
-    "theme_color": "#FF0000",
-    "icons": [
-      {
-        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='black' stroke='red' stroke-width='4'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='red'%3E🎤%3C/text%3E%3C/svg%3E",
-        "sizes": "192x192",
-        "type": "image/svg+xml"
-      }
-    ]
-  }
-  </script>
-  <script>
-    const manifestContent = document.getElementById("manifest").textContent;
-    const manifestBlob = new Blob([manifestContent], { type: "application/json" });
-    const manifestURL = URL.createObjectURL(manifestBlob);
-    const link = document.createElement("link");
-    link.rel = "manifest";
-    link.href = manifestURL;
-    document.head.appendChild(link);
-  </script>
-
   <style>
     body {
       margin: 0;
@@ -42,7 +14,7 @@
       overflow: hidden;
     }
 
-    /* FIXED: Controls always visible & responsive */
+    /* Controls always visible & responsive */
     #controls {
       position: fixed;
       top: 10px;
@@ -62,9 +34,16 @@
       padding: 6px 10px;
       margin: 2px;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 2.5vw;
+      min-font-size: 14px;
       flex: 1 1 auto;
       min-width: 80px;
+    }
+    #controls button.active {
+      background: red;
+      color: black;
+      font-weight: bold;
+      box-shadow: 0 0 10px red;
     }
 
     #tickerWrapper {
@@ -76,7 +55,8 @@
     }
     #ticker {
       display: inline-block;
-      font-size: 3em;
+      font-size: 8vw; /* responsive text size */
+      max-font-size: 5em;
       text-shadow: 0 0 8px orange, 0 0 16px red;
       animation: scroll linear infinite;
       animation-duration: 7s; /* default */
@@ -122,10 +102,20 @@
       alert("Speech recognition not supported in this browser.");
     }
 
-    document.getElementById("startBtn").onclick = () => recognition && recognition.start();
-    document.getElementById("stopBtn").onclick = () => recognition && recognition.stop();
+    document.getElementById("startBtn").onclick = () => {
+      if (recognition) {
+        recognition.start();
+        document.getElementById("startBtn").classList.add("active");
+      }
+    };
+    document.getElementById("stopBtn").onclick = () => {
+      if (recognition) {
+        recognition.stop();
+        document.getElementById("startBtn").classList.remove("active");
+      }
+    };
     document.getElementById("repeatBtn").onclick = () => setTicker(lastWords);
-    document.getElementById("skipBtn").onclick = () => setTicker("…"); // placeholder instead of blank
+    document.getElementById("skipBtn").onclick = () => setTicker("…");
 
     function setTicker(text) {
       let ticker = document.getElementById("ticker");
@@ -138,27 +128,17 @@
       document.getElementById("ticker").style.animationDuration = speed + "s";
     });
 
-    // FIXED: Restart recognition if orientation changes
+    // Restart recognition on orientation change
     window.addEventListener("orientationchange", () => {
       if (recognition) {
         recognition.stop();
-        setTimeout(() => recognition.start(), 500);
+        document.getElementById("startBtn").classList.remove("active");
+        setTimeout(() => {
+          recognition.start();
+          document.getElementById("startBtn").classList.add("active");
+        }, 500);
       }
     });
-
-    // Inline service worker
-    const swCode = `
-      self.addEventListener("install", (e) => self.skipWaiting());
-      self.addEventListener("activate", (e) => self.clients.claim());
-      self.addEventListener("fetch", (e) => {
-        e.respondWith(fetch(e.request).catch(() => new Response("Offline")));
-      });
-    `;
-    const swBlob = new Blob([swCode], { type: "application/javascript" });
-    const swURL = URL.createObjectURL(swBlob);
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register(swURL);
-    }
   </script>
 </body>
 </html>
