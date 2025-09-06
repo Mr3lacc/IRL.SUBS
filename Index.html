@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Ticker</title>
+
+  <!-- Inline manifest -->
+  <script id="manifest" type="application/json">
+  {
+    "name": "Voice Ticker",
+    "short_name": "Ticker",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#FF0000",
+    "icons": [
+      {
+        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='black' stroke='red' stroke-width='4'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='red'%3E🎤%3C/text%3E%3C/svg%3E",
+        "sizes": "192x192",
+        "type": "image/svg+xml"
+      }
+    ]
+  }
+  </script>
+  <script>
+    const manifestContent = document.getElementById("manifest").textContent;
+    const manifestBlob = new Blob([manifestContent], { type: "application/json" });
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    const link = document.createElement("link");
+    link.rel = "manifest";
+    link.href = manifestURL;
+    document.head.appendChild(link);
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: red;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+    #controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+    }
+    #controls button, #controls input {
+      background: black;
+      color: red;
+      border: 1px solid red;
+      padding: 6px 10px;
+      margin: 2px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    #tickerWrapper {
+      position: absolute;
+      bottom: 40%;
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    #ticker {
+      display: inline-block;
+      font-size: 3em;
+      text-shadow: 0 0 8px orange, 0 0 16px red;
+      animation: scroll linear infinite;
+      animation-duration: 7s; /* default */
+    }
+    @keyframes scroll {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button id="startBtn">🎤 Start</button>
+    <button id="stopBtn">⏹ Stop</button>
+    <button id="repeatBtn">⟲ Repeat</button>
+    <button id="skipBtn">⟼ Skip</button><br>
+    Speed: <input id="speedSlider" type="range" min="3" max="20" value="7">
+  </div>
+  <div id="tickerWrapper">
+    <div id="ticker"></div>
+  </div>
+
+  <script>
+    let recognition;
+    let lastWords = "";
+
+    if ("webkitSpeechRecognition" in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+
+      recognition.onresult = (event) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            let text = event.results[i][0].transcript.trim();
+            lastWords = text;
+            setTicker(text);
+          }
+        }
+      };
+    } else {
+      alert("Speech recognition not supported in this browser.");
+    }
+
+    document.getElementById("startBtn").onclick = () => recognition && recognition.start();
+    document.getElementById("stopBtn").onclick = () => recognition && recognition.stop();
+    document.getElementById("repeatBtn").onclick = () => setTicker(lastWords);
+    document.getElementById("skipBtn").onclick = () => setTicker("");
+
+    function setTicker(text) {
+      let ticker = document.getElementById("ticker");
+      ticker.innerHTML = text;
+    }
+
+    // Speed slider
+    document.getElementById("speedSlider").addEventListener("input", (e) => {
+      const speed = e.target.value;
+      document.getElementById("ticker").style.animationDuration = speed + "s";
+    });
+
+    // Inline service worker
+    const swCode = `
+      self.addEventListener("install", (e) => self.skipWaiting());
+      self.addEventListener("activate", (e) => self.clients.claim());
+      self.addEventListener("fetch", (e) => {
+        e.respondWith(fetch(e.request).catch(() => new Response("Offline")));
+      });
+    `;
+    const swBlob = new Blob([swCode], { type: "application/javascript" });
+    const swURL = URL.createObjectURL(swBlob);
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register(swURL);
+    }
+  </script>
+</body>
+</html>
