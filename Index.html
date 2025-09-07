@@ -1,211 +1,527 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IRL.SUBS</title>
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      color: lime;
-      font-family: 'Courier New', monospace;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>🎤 IRL.SUBS — Live Voice-to-Text Ticker</title>
+   <style>
+       * {
+           margin: 0;
+           padding: 0;
+           box-sizing: border-box;
+       }
 
-    #ticker {
-      white-space: nowrap;
-      font-size: 8vw;
-      animation: scroll linear infinite;
-    }
+       body {
+           font-family: 'Arial', sans-serif;
+           overflow: hidden;
+           background: #000;
+           color: #fff;
+           height: 100vh;
+           display: flex;
+           flex-direction: column;
+       }
 
-    @keyframes scroll {
-      from { transform: translateX(100%); }
-      to { transform: translateX(-100%); }
-    }
+       /* Theme Styles */
+       .theme-basic {
+           background: #000;
+           color: #fff;
+       }
 
-    #controls {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.9);
-      color: white;
-      padding: 15px;
-      overflow-y: auto;
-    }
+       .theme-neon {
+           background: #0a0a0f;
+           color: #00ff41;
+           text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41;
+       }
 
-    label { display:block; margin-top:10px; }
+       .theme-blackwhite {
+           background: #fff;
+           color: #000;
+       }
 
-    select, button, input {
-      width: 100%;
-      margin: 6px 0;
-      font-size: 16px;
-    }
+       .theme-comic {
+           font-family: 'Comic Sans MS', cursive, sans-serif;
+           background: #ffeb3b;
+           color: #e91e63;
+       }
 
-    /* Recording indicator */
-    #status {
-      text-align: center;
-      font-size: 18px;
-      margin: 10px 0;
-    }
+       .theme-morse {
+           font-family: 'Courier New', monospace;
+           background: #1a1a1a;
+           color: #00ff00;
+           letter-spacing: 0.2em;
+       }
 
-    .recording #status {
-      color: red;
-      font-weight: bold;
-    }
+       /* Settings Panel (Portrait) */
+       .settings-panel {
+           display: flex;
+           flex-direction: column;
+           padding: 20px;
+           gap: 15px;
+           background: rgba(0,0,0,0.9);
+           color: #fff;
+           max-width: 400px;
+           margin: 0 auto;
+           border-radius: 10px;
+           margin-top: 20px;
+       }
 
-    .dot {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      margin-right: 8px;
-      border-radius: 50%;
-      background: gray;
-    }
+       .settings-panel h1 {
+           text-align: center;
+           font-size: 1.5em;
+           margin-bottom: 10px;
+       }
 
-    .recording .dot {
-      background: red;
-      animation: pulse 1s infinite;
-    }
+       .control-group {
+           display: flex;
+           flex-direction: column;
+           gap: 8px;
+       }
 
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.3); opacity: 0.6; }
-      100% { transform: scale(1); opacity: 1; }
-    }
+       .control-group label {
+           font-weight: bold;
+           font-size: 0.9em;
+       }
 
-    /* Landscape = fullscreen ticker only */
-    @media screen and (orientation: landscape) {
-      #controls { display: none; }
-      #ticker { 
-        font-size: 12vw;
-        color: white;
-        text-shadow: 3px 3px 6px black;
-      }
-    }
-  </style>
+       .control-group select,
+       .control-group input {
+           padding: 10px;
+           border: none;
+           border-radius: 5px;
+           background: #333;
+           color: #fff;
+           font-size: 1em;
+       }
+
+       .button {
+           padding: 15px;
+           border: none;
+           border-radius: 8px;
+           font-size: 1.1em;
+           font-weight: bold;
+           cursor: pointer;
+           transition: all 0.3s ease;
+       }
+
+       .start-btn {
+           background: #4CAF50;
+           color: white;
+       }
+
+       .start-btn:hover {
+           background: #45a049;
+       }
+
+       .stop-btn {
+           background: #f44336;
+           color: white;
+       }
+
+       .stop-btn:hover {
+           background: #da190b;
+       }
+
+       .clear-btn {
+           background: #ff9800;
+           color: white;
+       }
+
+       .clear-btn:hover {
+           background: #e68900;
+       }
+
+       /* Ticker Display (Landscape) */
+       .ticker-container {
+           display: none;
+           height: 100vh;
+           width: 100vw;
+           position: relative;
+           overflow: hidden;
+           justify-content: center;
+           align-items: center;
+       }
+
+       .ticker-text {
+           white-space: nowrap;
+           font-size: 4em;
+           font-weight: bold;
+           animation: scroll-left 20s linear infinite;
+           position: absolute;
+           width: max-content;
+       }
+
+       .ticker-text.outlined {
+           text-shadow: 
+               -2px -2px 0 #000,
+               2px -2px 0 #000,
+               -2px 2px 0 #000,
+               2px 2px 0 #000;
+       }
+
+       @keyframes scroll-left {
+           0% {
+               transform: translateX(100vw);
+           }
+           100% {
+               transform: translateX(-100%);
+           }
+       }
+
+       /* Status indicators */
+       .status {
+           position: fixed;
+           top: 20px;
+           right: 20px;
+           background: rgba(0,0,0,0.7);
+           padding: 10px;
+           border-radius: 5px;
+           font-size: 0.9em;
+       }
+
+       .listening {
+           color: #4CAF50;
+       }
+
+       .stopped {
+           color: #f44336;
+       }
+
+       /* Instructions */
+       .instructions {
+           margin-top: 20px;
+           padding: 15px;
+           background: rgba(255,255,255,0.1);
+           border-radius: 8px;
+           font-size: 0.9em;
+           line-height: 1.4;
+       }
+
+       /* Responsive adjustments */
+       @media (orientation: landscape) {
+           .settings-panel {
+               display: none;
+           }
+           
+           .ticker-container {
+               display: flex;
+           }
+
+           .ticker-text {
+               font-size: 6vmin;
+           }
+       }
+
+       @media (orientation: portrait) {
+           .settings-panel {
+               display: flex;
+           }
+           
+           .ticker-container {
+               display: none;
+           }
+       }
+   </style>
 </head>
-<body>
-  <div id="ticker">🎤 IRL.SUBS ready…</div>
+<body class="theme-basic">
 
-  <!-- Controls (portrait only) -->
-  <div id="controls">
-    <div id="status"><span class="dot"></span><span id="statusText">Idle</span></div>
+   <!-- Settings Panel (Portrait Mode) -->
+   <div class="settings-panel">
+       <h1>🎤 IRL.SUBS</h1>
+       <p style="text-align: center; opacity: 0.8;">Live Voice-to-Text Ticker</p>
 
-    <label>Language:</label>
-    <select id="lang">
-      <option value="en-US">English (US)</option>
-      <option value="es-ES">Español</option>
-      <option value="fr-FR">Français</option>
-      <option value="de-DE">Deutsch</option>
-    </select>
+       <div class="control-group">
+           <label for="theme-select">🎨 Visual Theme</label>
+           <select id="theme-select">
+               <option value="basic">Basic (Black & White)</option>
+               <option value="neon">Neon Green</option>
+               <option value="blackwhite">High Contrast B&W</option>
+               <option value="comic">Comic Sans Fun</option>
+               <option value="morse">Morse Code Style</option>
+           </select>
+       </div>
 
-    <label>Font:</label>
-    <select id="font">
-      <option value="Courier New">Courier</option>
-      <option value="Arial">Arial</option>
-      <option value="Comic Sans MS">Comic Sans</option>
-      <option value="monospace">Monospace</option>
-    </select>
+       <div class="control-group">
+           <label for="scroll-speed">⚡ Scroll Speed</label>
+           <input type="range" id="scroll-speed" min="5" max="30" value="20" step="1">
+           <span id="speed-value">20s per cycle</span>
+       </div>
 
-    <label>Text Size:</label>
-    <input type="range" id="size" min="4" max="15" value="8">
+       <div class="control-group">
+           <label for="language-select">🌍 Language</label>
+           <select id="language-select">
+               <option value="en-US">English (US)</option>
+               <option value="en-GB">English (UK)</option>
+               <option value="es-ES">Spanish</option>
+               <option value="fr-FR">French</option>
+               <option value="de-DE">German</option>
+               <option value="it-IT">Italian</option>
+               <option value="pt-BR">Portuguese</option>
+               <option value="ja-JP">Japanese</option>
+               <option value="ko-KR">Korean</option>
+               <option value="zh-CN">Chinese</option>
+           </select>
+       </div>
 
-    <label>Outline:</label>
-    <input type="checkbox" id="outline">
+       <div class="control-group">
+           <label>♿ Accessibility</label>
+           <div style="display: flex; gap: 10px;">
+               <input type="checkbox" id="text-outline"> 
+               <label for="text-outline" style="font-weight: normal;">Text Outline</label>
+           </div>
+       </div>
 
-    <label>Scroll Speed:</label>
-    <input type="range" id="speed" min="5" max="30" value="10">
+       <button class="button start-btn" id="start-btn">🎙️ Start Listening</button>
+       <button class="button stop-btn" id="stop-btn" style="display: none;">⏹️ Stop</button>
+       <button class="button clear-btn" id="clear-btn">🗑️ Clear Text</button>
 
-    <button onclick="startListening()">▶️ Start</button>
-    <button onclick="stopListening()">⏹️ Stop</button>
-    <button onclick="repeatLast()">🔁 Repeat</button>
-    <button onclick="clearTicker()">⏭️ Skip</button>
-  </div>
+       <div class="instructions">
+           <strong>📋 Instructions:</strong><br>
+           • Rotate to landscape for fullscreen ticker<br>
+           • Volume ⬇️ = Repeat last phrase<br>
+           • Volume ⬆️ = Skip/Clear wrong words<br>
+           • Works best in quiet environments
+       </div>
+   </div>
 
-<script>
-let ticker = document.getElementById("ticker");
-let langSelect = document.getElementById("lang");
-let fontSelect = document.getElementById("font");
-let sizeInput = document.getElementById("size");
-let outlineCheck = document.getElementById("outline");
-let speedInput = document.getElementById("speed");
+   <!-- Ticker Display (Landscape Mode) -->
+   <div class="ticker-container">
+       <div class="ticker-text" id="ticker-text">🎤 IRL.SUBS Ready - Start speaking...</div>
+   </div>
 
-let statusEl = document.getElementById("status");
-let statusText = document.getElementById("statusText");
+   <!-- Status Indicator -->
+   <div class="status" id="status">
+       <span class="stopped">● Stopped</span>
+   </div>
 
-let recognition;
-let lastText = "";
-let isListening = false;
+   <script>
+       let recognition;
+       let isListening = false;
+       let currentText = '';
+       let lastPhrase = '';
+       let scrollSpeed = 20;
+       let currentLanguage = 'en-US';
 
-function initRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert("❌ Speech Recognition not supported here!");
-    return;
-  }
-  recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
+       // DOM Elements
+       const startBtn = document.getElementById('start-btn');
+       const stopBtn = document.getElementById('stop-btn');
+       const clearBtn = document.getElementById('clear-btn');
+       const themeSelect = document.getElementById('theme-select');
+       const speedSlider = document.getElementById('scroll-speed');
+       const speedValue = document.getElementById('speed-value');
+       const languageSelect = document.getElementById('language-select');
+       const textOutline = document.getElementById('text-outline');
+       const tickerText = document.getElementById('ticker-text');
+       const status = document.getElementById('status');
 
-  recognition.onresult = (event) => {
-    let transcript = "";
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      transcript += event.results[i][0].transcript;
-    }
-    lastText = transcript.trim();
-    scrollText(lastText || "...");
-  };
+       // Initialize Speech Recognition
+       function initSpeechRecognition() {
+           if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+               alert('Speech recognition not supported in this browser. Please use Chrome or Edge.');
+               return false;
+           }
 
-  recognition.onstart = () => setStatus(true, "Listening…");
-  recognition.onend = () => {
-    setStatus(false, "Idle");
-    if (isListening) recognition.start();
-  };
-}
+           const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+           recognition = new SpeechRecognition();
+           
+           recognition.continuous = true;
+           recognition.interimResults = true;
+           recognition.lang = currentLanguage;
+           
+           recognition.onstart = () => {
+               console.log('Speech recognition started');
+               isListening = true;
+               updateStatus(true);
+           };
 
-function setStatus(active, text) {
-  if (active) {
-    document.body.classList.add("recording");
-  } else {
-    document.body.classList.remove("recording");
-  }
-  statusText.textContent = text;
-}
+           recognition.onresult = (event) => {
+               let interimTranscript = '';
+               let finalTranscript = '';
 
-function startListening() {
-  if (!recognition) initRecognition();
-  if (!recognition) return;
-  recognition.lang = langSelect.value;
-  recognition.start();
-  isListening = true;
-}
+               for (let i = event.resultIndex; i < event.results.length; i++) {
+                   const transcript = event.results[i][0].transcript;
+                   if (event.results[i].isFinal) {
+                       finalTranscript += transcript + ' ';
+                   } else {
+                       interimTranscript += transcript;
+                   }
+               }
 
-function stopListening() {
-  if (recognition) recognition.stop();
-  isListening = false;
-  setStatus(false, "Stopped");
-}
+               if (finalTranscript) {
+                   currentText += finalTranscript;
+                   lastPhrase = finalTranscript.trim();
+                   updateTicker();
+               }
+           };
 
-function scrollText(text) {
-  ticker.textContent = text;
-  ticker.style.fontFamily = fontSelect.value;
-  ticker.style.fontSize = sizeInput.value + "vw";
-  ticker.style.textShadow = outlineCheck.checked ? "2px 2px 4px black" : "none";
-  let duration = speedInput.value;
-  ticker.style.animation = `scroll ${duration}s linear infinite`;
-}
+           recognition.onerror = (event) => {
+               console.error('Speech recognition error:', event.error);
+               if (event.error === 'not-allowed') {
+                   alert('Microphone access denied. Please allow microphone access and refresh the page.');
+               }
+           };
 
-function repeatLast() {
-  if (lastText) scrollText(lastText);
-}
+           recognition.onend = () => {
+               console.log('Speech recognition ended');
+               if (isListening) {
+                   // Restart if we're still supposed to be listening
+                   setTimeout(() => recognition.start(), 100);
+               }
+           };
 
-function clearTicker() {
-  ticker.textContent = "⏭️ Skipped";
-}
-</script>
+           return true;
+       }
+
+       // Update ticker text
+       function updateTicker() {
+           tickerText.textContent = currentText || '🎤 IRL.SUBS Ready - Start speaking...';
+           updateScrollAnimation();
+       }
+
+       // Update scroll animation speed
+       function updateScrollAnimation() {
+           tickerText.style.animationDuration = scrollSpeed + 's';
+       }
+
+       // Update status indicator
+       function updateStatus(listening) {
+           if (listening) {
+               status.innerHTML = '<span class="listening">● Listening</span>';
+           } else {
+               status.innerHTML = '<span class="stopped">● Stopped</span>';
+           }
+       }
+
+       // Theme switching
+       function changeTheme(theme) {
+           document.body.className = `theme-${theme}`;
+       }
+
+       // Start listening
+       function startListening() {
+           if (!recognition && !initSpeechRecognition()) {
+               return;
+           }
+
+           recognition.lang = currentLanguage;
+           recognition.start();
+           startBtn.style.display = 'none';
+           stopBtn.style.display = 'block';
+       }
+
+       // Stop listening
+       function stopListening() {
+           if (recognition) {
+               isListening = false;
+               recognition.stop();
+           }
+           updateStatus(false);
+           startBtn.style.display = 'block';
+           stopBtn.style.display = 'none';
+       }
+
+       // Clear text
+       function clearText() {
+           currentText = '';
+           updateTicker();
+       }
+
+       // Repeat last phrase
+       function repeatLastPhrase() {
+           if (lastPhrase) {
+               currentText += ' [REPEAT: ' + lastPhrase + '] ';
+               updateTicker();
+           }
+       }
+
+       // Skip/clear wrong words
+       function skipWords() {
+           // Remove last 10 characters or last word
+           const words = currentText.trim().split(' ');
+           if (words.length > 1) {
+               words.pop();
+               currentText = words.join(' ') + ' ';
+               updateTicker();
+           }
+       }
+
+       // Event Listeners
+       startBtn.addEventListener('click', startListening);
+       stopBtn.addEventListener('click', stopListening);
+       clearBtn.addEventListener('click', clearText);
+
+       themeSelect.addEventListener('change', (e) => {
+           changeTheme(e.target.value);
+       });
+
+       speedSlider.addEventListener('input', (e) => {
+           scrollSpeed = e.target.value;
+           speedValue.textContent = scrollSpeed + 's per cycle';
+           updateScrollAnimation();
+       });
+
+       languageSelect.addEventListener('change', (e) => {
+           currentLanguage = e.target.value;
+           if (recognition) {
+               recognition.lang = currentLanguage;
+           }
+       });
+
+       textOutline.addEventListener('change', (e) => {
+           if (e.target.checked) {
+               tickerText.classList.add('outlined');
+           } else {
+               tickerText.classList.remove('outlined');
+           }
+       });
+
+       // Hardware button support (Volume buttons)
+       document.addEventListener('keydown', (e) => {
+           // Volume Down (or Down Arrow) - Repeat last phrase
+           if (e.key === 'ArrowDown' || e.key === 'VolumeDown') {
+               e.preventDefault();
+               repeatLastPhrase();
+           }
+           
+           // Volume Up (or Up Arrow) - Skip/clear wrong words
+           if (e.key === 'ArrowUp' || e.key === 'VolumeUp') {
+               e.preventDefault();
+               skipWords();
+           }
+
+           // Space bar - Toggle listening
+           if (e.key === ' ') {
+               e.preventDefault();
+               if (isListening) {
+                   stopListening();
+               } else {
+                   startListening();
+               }
+           }
+
+           // Escape - Clear text
+           if (e.key === 'Escape') {
+               e.preventDefault();
+               clearText();
+           }
+       });
+
+       // Initialize
+       updateTicker();
+       updateScrollAnimation();
+
+       // Handle orientation changes
+       window.addEventListener('orientationchange', () => {
+           setTimeout(() => {
+               updateScrollAnimation();
+           }, 500);
+       });
+
+       // Request microphone permissions on load
+       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+           navigator.mediaDevices.getUserMedia({ audio: true })
+               .then(() => console.log('Microphone access granted'))
+               .catch(() => console.log('Microphone access denied'));
+       }
+   </script>
+
 </body>
 </html>
