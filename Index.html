@@ -258,14 +258,104 @@
                <option value="ja-JP">Japanese</option>
                <option value="ko-KR">Korean</option>
                <option value="zh-CN">Chinese</option>
+               <option value="ar-SA">Arabic</option>
+               <option value="hi-IN">Hindi</option>
+               <option value="ru-RU">Russian</option>
            </select>
        </div>
 
        <div class="control-group">
-           <label>♿ Accessibility</label>
-           <div style="display: flex; gap: 10px;">
-               <input type="checkbox" id="text-outline"> 
-               <label for="text-outline" style="font-weight: normal;">Text Outline</label>
+           <label for="font-family">🔤 Font Family</label>
+           <select id="font-family">
+               <option value="Arial">Arial</option>
+               <option value="'Times New Roman'">Times New Roman</option>
+               <option value="'Comic Sans MS'">Comic Sans MS</option>
+               <option value="'Courier New'">Courier New</option>
+               <option value="'Impact'">Impact</option>
+               <option value="'Georgia'">Georgia</option>
+               <option value="'Verdana'">Verdana</option>
+               <option value="'Trebuchet MS'">Trebuchet MS</option>
+               <option value="'Helvetica'">Helvetica</option>
+               <option value="'Lucida Console'">Lucida Console</option>
+           </select>
+       </div>
+
+       <div class="control-group">
+           <label for="font-size">📏 Font Size</label>
+           <input type="range" id="font-size" min="2" max="12" value="6" step="0.5">
+           <span id="font-size-value">6vmin</span>
+       </div>
+
+       <div class="control-group">
+           <label>📝 Font Style</label>
+           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+               <div style="display: flex; align-items: center; gap: 5px;">
+                   <input type="checkbox" id="font-bold">
+                   <label for="font-bold" style="font-weight: normal;">Bold</label>
+               </div>
+               <div style="display: flex; align-items: center; gap: 5px;">
+                   <input type="checkbox" id="font-italic">
+                   <label for="font-italic" style="font-weight: normal;">Italic</label>
+               </div>
+               <div style="display: flex; align-items: center; gap: 5px;">
+                   <input type="checkbox" id="font-underline">
+                   <label for="font-underline" style="font-weight: normal;">Underline</label>
+               </div>
+           </div>
+       </div>
+
+       <div class="control-group">
+           <label for="text-color">🎨 Text Color</label>
+           <div style="display: flex; gap: 10px; align-items: center;">
+               <input type="color" id="text-color" value="#ffffff" style="width: 50px; height: 40px; border: none; border-radius: 5px;">
+               <select id="color-presets">
+                   <option value="">Color Presets</option>
+                   <option value="#ffffff">White</option>
+                   <option value="#00ff41">Matrix Green</option>
+                   <option value="#ff0040">Hot Pink</option>
+                   <option value="#00ffff">Cyan</option>
+                   <option value="#ffff00">Yellow</option>
+                   <option value="#ff8000">Orange</option>
+                   <option value="#8000ff">Purple</option>
+                   <option value="#ff0000">Red</option>
+                   <option value="#0080ff">Blue</option>
+               </select>
+           </div>
+       </div>
+
+       <div class="control-group">
+           <label for="bg-color">🖼️ Background Color</label>
+           <div style="display: flex; gap: 10px; align-items: center;">
+               <input type="color" id="bg-color" value="#000000" style="width: 50px; height: 40px; border: none; border-radius: 5px;">
+               <select id="bg-presets">
+                   <option value="">Background Presets</option>
+                   <option value="#000000">Black</option>
+                   <option value="#ffffff">White</option>
+                   <option value="#0a0a0f">Dark Blue</option>
+                   <option value="#1a1a1a">Dark Gray</option>
+                   <option value="#800080">Purple</option>
+                   <option value="#004000">Dark Green</option>
+                   <option value="#400000">Dark Red</option>
+                   <option value="#000040">Navy</option>
+               </select>
+           </div>
+       </div>
+
+       <div class="control-group">
+           <label>♿ Accessibility & Effects</label>
+           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+               <div style="display: flex; align-items: center; gap: 5px;">
+                   <input type="checkbox" id="text-outline">
+                   <label for="text-outline" style="font-weight: normal;">Text Outline</label>
+               </div>
+               <div style="display: flex; align-items: center; gap: 5px;">
+                   <input type="checkbox" id="text-shadow">
+                   <label for="text-shadow" style="font-weight: normal;">Text Shadow</label>
+               </div>
+               <div style="display: flex; align-items: center; gap: 5px;">
+                   <input type="checkbox" id="text-glow">
+                   <label for="text-glow" style="font-weight: normal;">Neon Glow</label>
+               </div>
            </div>
        </div>
 
@@ -275,10 +365,12 @@
 
        <div class="instructions">
            <strong>📋 Instructions:</strong><br>
+           • <strong>IMPORTANT:</strong> Allow microphone access when prompted!<br>
            • Rotate to landscape for fullscreen ticker<br>
            • Volume ⬇️ = Repeat last phrase<br>
            • Volume ⬆️ = Skip/Clear wrong words<br>
-           • Works best in quiet environments
+           • Works best in quiet environments<br>
+           • Use Chrome/Edge/Safari for best results
        </div>
    </div>
 
@@ -299,6 +391,10 @@
        let lastPhrase = '';
        let scrollSpeed = 20;
        let currentLanguage = 'en-US';
+       let currentFontFamily = 'Arial';
+       let currentFontSize = 6;
+       let currentTextColor = '#ffffff';
+       let currentBgColor = '#000000';
 
        // DOM Elements
        const startBtn = document.getElementById('start-btn');
@@ -308,36 +404,55 @@
        const speedSlider = document.getElementById('scroll-speed');
        const speedValue = document.getElementById('speed-value');
        const languageSelect = document.getElementById('language-select');
+       const fontFamilySelect = document.getElementById('font-family');
+       const fontSizeSlider = document.getElementById('font-size');
+       const fontSizeValue = document.getElementById('font-size-value');
+       const fontBold = document.getElementById('font-bold');
+       const fontItalic = document.getElementById('font-italic');
+       const fontUnderline = document.getElementById('font-underline');
+       const textColorPicker = document.getElementById('text-color');
+       const bgColorPicker = document.getElementById('bg-color');
+       const colorPresets = document.getElementById('color-presets');
+       const bgPresets = document.getElementById('bg-presets');
        const textOutline = document.getElementById('text-outline');
+       const textShadow = document.getElementById('text-shadow');
+       const textGlow = document.getElementById('text-glow');
        const tickerText = document.getElementById('ticker-text');
        const status = document.getElementById('status');
 
        // Initialize Speech Recognition
        function initSpeechRecognition() {
            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-               alert('Speech recognition not supported in this browser. Please use Chrome or Edge.');
+               alert('Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.');
                return false;
            }
 
            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
            recognition = new SpeechRecognition();
            
+           // More aggressive settings for better recognition
            recognition.continuous = true;
            recognition.interimResults = true;
            recognition.lang = currentLanguage;
+           recognition.maxAlternatives = 1;
            
            recognition.onstart = () => {
-               console.log('Speech recognition started');
+               console.log('🎤 Speech recognition started');
                isListening = true;
                updateStatus(true);
+               // Visual feedback
+               startBtn.textContent = '🔴 LISTENING...';
            };
 
            recognition.onresult = (event) => {
+               console.log('🎯 Got speech result:', event);
                let interimTranscript = '';
                let finalTranscript = '';
 
                for (let i = event.resultIndex; i < event.results.length; i++) {
                    const transcript = event.results[i][0].transcript;
+                   console.log('Transcript:', transcript, 'isFinal:', event.results[i].isFinal);
+                   
                    if (event.results[i].isFinal) {
                        finalTranscript += transcript + ' ';
                    } else {
@@ -345,40 +460,103 @@
                    }
                }
 
+               // Show interim results immediately for faster feedback
+               if (interimTranscript || finalTranscript) {
+                   const displayText = currentText + finalTranscript + interimTranscript;
+                   tickerText.textContent = displayText || '🎤 IRL.SUBS Ready - Start speaking...';
+               }
+
                if (finalTranscript) {
                    currentText += finalTranscript;
                    lastPhrase = finalTranscript.trim();
                    updateTicker();
+                   console.log('✅ Added to ticker:', finalTranscript);
                }
            };
 
+           recognition.onspeechstart = () => {
+               console.log('🗣️ Speech detected');
+           };
+
+           recognition.onsoundstart = () => {
+               console.log('🔊 Sound detected');
+           };
+
            recognition.onerror = (event) => {
-               console.error('Speech recognition error:', event.error);
+               console.error('❌ Speech recognition error:', event.error, event);
+               
                if (event.error === 'not-allowed') {
-                   alert('Microphone access denied. Please allow microphone access and refresh the page.');
+                   alert('❌ Microphone access denied!\n\n1. Click the 🔒 lock icon in your address bar\n2. Allow microphone access\n3. Refresh the page');
+                   updateStatus(false);
+               } else if (event.error === 'no-speech') {
+                   console.log('⚠️ No speech detected, continuing...');
+                   // Don't stop for no-speech, just continue
+               } else if (event.error === 'network') {
+                   alert('❌ Network error. Check your internet connection.');
+               } else {
+                   console.log('⚠️ Recognition error:', event.error, '- trying to restart...');
                }
            };
 
            recognition.onend = () => {
-               console.log('Speech recognition ended');
+               console.log('⏹️ Speech recognition ended');
                if (isListening) {
-                   // Restart if we're still supposed to be listening
-                   setTimeout(() => recognition.start(), 100);
+                   console.log('🔄 Restarting recognition...');
+                   // Restart immediately if we're still supposed to be listening
+                   setTimeout(() => {
+                       try {
+                           recognition.start();
+                       } catch (e) {
+                           console.error('Failed to restart recognition:', e);
+                       }
+                   }, 100);
+               } else {
+                   startBtn.textContent = '🎙️ Start Listening';
                }
            };
 
            return true;
        }
 
-       // Update ticker text
-       function updateTicker() {
-           tickerText.textContent = currentText || '🎤 IRL.SUBS Ready - Start speaking...';
-           updateScrollAnimation();
+       // Update ticker styling
+       function updateTickerStyling() {
+           tickerText.style.fontFamily = currentFontFamily;
+           tickerText.style.fontSize = currentFontSize + 'vmin';
+           tickerText.style.color = currentTextColor;
+           tickerText.style.fontWeight = fontBold.checked ? 'bold' : 'normal';
+           tickerText.style.fontStyle = fontItalic.checked ? 'italic' : 'normal';
+           tickerText.style.textDecoration = fontUnderline.checked ? 'underline' : 'none';
+           
+           // Background color
+           document.body.style.background = currentBgColor;
+           
+           // Text effects
+           let textShadowCSS = '';
+           if (textOutline.checked) {
+               textShadowCSS += `-2px -2px 0 ${currentBgColor}, 2px -2px 0 ${currentBgColor}, -2px 2px 0 ${currentBgColor}, 2px 2px 0 ${currentBgColor}`;
+           }
+           if (textShadow.checked) {
+               if (textShadowCSS) textShadowCSS += ', ';
+               textShadowCSS += `4px 4px 8px rgba(0,0,0,0.8)`;
+           }
+           if (textGlow.checked) {
+               if (textShadowCSS) textShadowCSS += ', ';
+               textShadowCSS += `0 0 10px ${currentTextColor}, 0 0 20px ${currentTextColor}, 0 0 30px ${currentTextColor}`;
+           }
+           
+           tickerText.style.textShadow = textShadowCSS;
        }
 
        // Update scroll animation speed
        function updateScrollAnimation() {
            tickerText.style.animationDuration = scrollSpeed + 's';
+       }
+
+       // Update ticker text
+       function updateTicker() {
+           tickerText.textContent = currentText || '🎤 IRL.SUBS Ready - Start speaking...';
+           updateScrollAnimation();
+           updateTickerStyling();
        }
 
        // Update status indicator
@@ -396,15 +574,34 @@
        }
 
        // Start listening
-       function startListening() {
+       async function startListening() {
+           console.log('🚀 Starting listening process...');
+           
+           // First, request microphone permission explicitly
+           try {
+               const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+               console.log('✅ Microphone permission granted');
+               stream.getTracks().forEach(track => track.stop()); // Stop the stream, we just needed permission
+           } catch (error) {
+               console.error('❌ Microphone permission denied:', error);
+               alert('❌ Please allow microphone access:\n\n1. Click "Allow" when prompted\n2. Or click the 🔒 in your address bar\n3. Set microphone to "Allow"\n4. Refresh the page');
+               return;
+           }
+
            if (!recognition && !initSpeechRecognition()) {
                return;
            }
 
-           recognition.lang = currentLanguage;
-           recognition.start();
-           startBtn.style.display = 'none';
-           stopBtn.style.display = 'block';
+           try {
+               recognition.lang = currentLanguage;
+               recognition.start();
+               startBtn.style.display = 'none';
+               stopBtn.style.display = 'block';
+               console.log('🎤 Recognition started successfully');
+           } catch (error) {
+               console.error('❌ Failed to start recognition:', error);
+               alert('❌ Failed to start speech recognition. Please refresh the page and try again.');
+           }
        }
 
        // Stop listening
@@ -465,13 +662,55 @@
            }
        });
 
-       textOutline.addEventListener('change', (e) => {
-           if (e.target.checked) {
-               tickerText.classList.add('outlined');
-           } else {
-               tickerText.classList.remove('outlined');
+       // Font controls
+       fontFamilySelect.addEventListener('change', (e) => {
+           currentFontFamily = e.target.value;
+           updateTickerStyling();
+       });
+
+       fontSizeSlider.addEventListener('input', (e) => {
+           currentFontSize = e.target.value;
+           fontSizeValue.textContent = currentFontSize + 'vmin';
+           updateTickerStyling();
+       });
+
+       fontBold.addEventListener('change', updateTickerStyling);
+       fontItalic.addEventListener('change', updateTickerStyling);
+       fontUnderline.addEventListener('change', updateTickerStyling);
+
+       // Color controls
+       textColorPicker.addEventListener('input', (e) => {
+           currentTextColor = e.target.value;
+           updateTickerStyling();
+       });
+
+       bgColorPicker.addEventListener('input', (e) => {
+           currentBgColor = e.target.value;
+           updateTickerStyling();
+       });
+
+       colorPresets.addEventListener('change', (e) => {
+           if (e.target.value) {
+               currentTextColor = e.target.value;
+               textColorPicker.value = e.target.value;
+               updateTickerStyling();
+               e.target.value = ''; // Reset dropdown
            }
        });
+
+       bgPresets.addEventListener('change', (e) => {
+           if (e.target.value) {
+               currentBgColor = e.target.value;
+               bgColorPicker.value = e.target.value;
+               updateTickerStyling();
+               e.target.value = ''; // Reset dropdown
+           }
+       });
+
+       // Effect toggles
+       textOutline.addEventListener('change', updateTickerStyling);
+       textShadow.addEventListener('change', updateTickerStyling);
+       textGlow.addEventListener('change', updateTickerStyling);
 
        // Hardware button support (Volume buttons)
        document.addEventListener('keydown', (e) => {
@@ -507,6 +746,7 @@
        // Initialize
        updateTicker();
        updateScrollAnimation();
+       updateTickerStyling();
 
        // Handle orientation changes
        window.addEventListener('orientationchange', () => {
@@ -515,11 +755,35 @@
            }, 500);
        });
 
-       // Request microphone permissions on load
+       // Request microphone permissions on load and test
        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
            navigator.mediaDevices.getUserMedia({ audio: true })
-               .then(() => console.log('Microphone access granted'))
-               .catch(() => console.log('Microphone access denied'));
+               .then((stream) => {
+                   console.log('✅ Microphone access granted on load');
+                   stream.getTracks().forEach(track => track.stop());
+                   // Add a test button if needed
+                   const testBtn = document.createElement('button');
+                   testBtn.textContent = '🧪 Test Microphone';
+                   testBtn.className = 'button';
+                   testBtn.style.background = '#2196F3';
+                   testBtn.onclick = () => {
+                       if (!isListening) {
+                           startListening();
+                       }
+                   };
+                   document.querySelector('.settings-panel').appendChild(testBtn);
+               })
+               .catch((error) => {
+                   console.log('❌ Microphone access denied on load:', error);
+                   // Show warning
+                   const warning = document.createElement('div');
+                   warning.style.cssText = 'background: #ff5722; color: white; padding: 10px; border-radius: 5px; margin-top: 10px; text-align: center;';
+                   warning.innerHTML = '⚠️ <strong>Microphone access needed!</strong><br>Click "Allow" when you start listening.';
+                   document.querySelector('.settings-panel').appendChild(warning);
+               });
+       } else {
+           console.log('❌ getUserMedia not supported');
+           alert('❌ Your browser doesn\'t support microphone access. Please use Chrome, Edge, or Safari.');
        }
    </script>
 
